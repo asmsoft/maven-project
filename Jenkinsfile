@@ -1,6 +1,17 @@
 pipeline {
     
     agent any
+
+    parameters {
+        string(name: 'tomcat_dev', defaultValue: '85.195.102.24', description: 'Staging Tomcat')
+        string(name: 'dev_path', defaultValue: '/opt/apache-tomcat-9.0.8', description: 'Staging deployment path')
+        string(name: 'tomcat_prod', defaultValue: '85.195.102.24', description: 'Production Tomcat')
+        string(name: 'prod_path', defaultValue: '/opt/apache-tomcat-9.0.8-prod', description: 'Production deployment path')
+    }
+
+    triggers {
+        pollSCM('* * * * *');
+    }
     
     stages {
         
@@ -16,27 +27,19 @@ pipeline {
             }
         }
 
-        stage('Depoy to staging') {
-            steps {
-                build job: 'deploy-to-stage'
-            }
-        }
-
-        stage('Deploy to prod') {
-            steps {
-                timeout(time: 5, unit: 'DAYS') {
-                    input message: 'Approve PRODUCTION Deployment?'
+        stage('Deployments') {
+            parallel {
+                stage('Deploy to Staging') {
+                    steps {
+                        sh 'scp **/target/*.war root@${tomcat_dev}:${dev_path}/webapps'
+                    }
                 }
-                build job: 'deploy-to-prod'
-            }
-            post {
-                success {
-                    echo 'Code deployed to Production.'
+                stage('Deploy to Production') {
+                    steps {
+                        sh 'scp **/target/*.war root@${tomcat_prod}:${prod_path}/webapps'
+                    }
                 }
-                failure {
-                    echo 'Deployment failed.'
-                }
-            }
+            }            
         }
 
     }
