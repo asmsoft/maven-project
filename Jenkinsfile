@@ -31,12 +31,12 @@ pipeline {
             parallel {
                 stage('Deploy to Staging') {
                     steps {
-                        sh "scp **/target/*.war root@${params.tomcat_dev}:${params.dev_path}/webapps"
+                        sh "scp -v -o StrictHostKeyChecking=no **/target/*.war root@${params.tomcat_dev}:${params.dev_path}/webapps"
                     }
                 }
                 stage('Deploy to Production') {
                     steps {
-                        sh "scp **/target/*.war root@${params.tomcat_prod}:${params.prod_path}/webapps"
+                        sh "scp -v -o StrictHostKeyChecking=no **/target/*.war root@${params.tomcat_prod}:${params.prod_path}/webapps"
                     }
                 }
             }            
